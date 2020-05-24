@@ -1,4 +1,4 @@
-function outArray = smallHough(gr_highRes, holeRad)
+function oneArray = smallHough(gr_highRes, holeRad)
   debug = false;
   sizeMarginL = 25;
   sizeMarginH = 0;
@@ -6,59 +6,47 @@ function outArray = smallHough(gr_highRes, holeRad)
   tic;
   
   outArray = [];
-
-  param2from = 4;
-  param2to   = 9;
-
-  if debug
-    printf("Param2:");
-  endif
+  oneArray = [];
   
-  if debug
-    for param2=param2from:param2to
-      printf("%3d     ", param2);
-    endfor
-    printf("\n");
-  endif
-
-  par2arr = [];
-  
-  for k = 1:13
-    param1 = 175 + k*5;
-    
-    if debug
-      printf("%d     ", param1);
-    endif
-    
-    for param2=param2from:param2to
-      #disp("Info: Hough circles 2.");
-      circles = cv.HoughCircles(gr_highRes, 
-                            'MinRadius', holeRad/2,
-                            'MaxRadius', holeRad*1.2,
-                            'Param1', param1, 
-                            'Param2', param2,
-                            'MinDist', 1400,
-                            'DP', 1
+  for k = 1:15
+    circles = cv.HoughCircles(gr_highRes, 
+                            'MinRadius', holeRad - 5,
+                            'MaxRadius', holeRad + 5,
+                            #'Param1', param1, 
+                            'Param2', 16-k,
+                            'MinDist', 1400
+                            #'DP', 1
                        );    
       
-      if(size(circles)(2) == 1)
-        if debug
-          printf("%4.1f   ", circles{1}(1));
-          #circles 
-        endif
-          
-        par2arr = [par2arr; circles{1}(1) circles{1}(2)];
+    if(size(circles)(2) == 1)
+      if debug
+        printf("%4.1f   ", circles{1}(1));
+        #circles 
       endif
-    
-    endfor
-    #outArray = [outArray; par2arr]; 
-    if debug
-      disp("");
+        
+      oneArray = [circles{1}(1) circles{1}(2)];
+      return
     endif
-    
-  endfor
   
-  #par2arr
-  outArray = round(mean(par2arr));
+  endfor
+
+  #{
+  for i=1:2
+    [n, bin] = hist(oneArray(:,i), unique(oneArray(:,i)));
+    [~,idx] = sort(-n);
+    
+    #outArray(fix((i-1)/2) + 1, rem(i, 2) + 1) = round(bin(idx(1)));
+    outArray(1, i) = round(bin(idx(1)));
+    #outArray(2, i) = n(idx(1));
+    
+    #outArray(2, i) = round(bin(idx(2)));
+    
+    #outArray(4, i) = n(idx(2));
+    #outArray(5, i) = round(bin(idx(3)));
+    #outArray(6, i) = idx(3);
+    #outArray(5, i) = round(mean(eightArray(:,i)));
+  endfor  
+  #}
+  #outArray = round(mean(par2arr));
     
 endfunction

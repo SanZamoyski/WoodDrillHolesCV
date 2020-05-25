@@ -49,7 +49,7 @@ for b = 3:size(filenames)(1)
   #h = round(mean(ec));
 
   #ec = eightCircles(im_highRes, gr_highRes);
-  [ec, param2] = eightCircles(bw_gray);
+  [ec, param2b] = eightCircles(bw_gray);
   #ec = bestCombination(ec);
   realDistance = distancesSum(ec);
   ec = convertTo2x8(ec);
@@ -80,7 +80,8 @@ for b = 3:size(filenames)(1)
   #gr_highRes = cv.cvtColor(im_highRes, 'RGB2GRAY');
   h2 = [cropSize/2 cropSize/2];
   
-  r = smallHough(bw_gray, holeRad);
+  [r, param2s] = smallHough(bw_gray, holeRad);
+  r = round(r);
   
   im_highResMark = cv.drawMarker(im_highResOrig, h2, 'MarkerSize', 69, 'Color', 'b', 'Thickness', 1);
   im_highResMark = cv.drawMarker(im_highResMark, r, 'MarkerSize', 35, 'Color', 'm', 'Thickness', 1);
@@ -94,10 +95,12 @@ for b = 3:size(filenames)(1)
   
   imwrite(im_out, ['output/' basename '.png']);
   
-  printf("%d %d\t%d %d\t%d\t%d\t\t%2.1f\n", h(1), h(2), r(1), r(2), param2, abs(nominalDistance - realDistance), norm(h2-r, 2));
+  stOut = sprintf("%d %d\t%d %d\t\t%d %d\t%d\t\t%2.1f", h(1), h(2), r(1), r(2), param2b, param2s, round(abs(nominalDistance - realDistance)), norm(h2-r, 2));
+  
+  printf("%s\n", stOut);
   
   fid = fopen (['output/' basename '.txt'], "w");
-  fprintf(fid, "%s:\t\t%d %d\t%d %d\t\t%d\t%d\t\t%2.1f\n", basename, h(1), h(2), r(1), r(2), param2, abs(nominalDistance - realDistance), norm(h2-r, 2));
+  fprintf(fid, "%s\n", stOut);
   fclose (fid);
   
 endfor

@@ -1,4 +1,4 @@
-function oneArray = smallHough(gr_highRes, holeRad)
+function [oneArray, param2] = smallHough(gr_highRes, holeRad)
   debug = false;
   sizeMarginL = 25;
   sizeMarginH = 0;
@@ -8,12 +8,13 @@ function oneArray = smallHough(gr_highRes, holeRad)
   outArray = [];
   oneArray = [];
   
-  for k = 1:15
+  for k = 1:50
+    param2 = 51 - k;
     circles = cv.HoughCircles(gr_highRes, 
                             'MinRadius', holeRad - 5,
                             'MaxRadius', holeRad + 5,
                             #'Param1', param1, 
-                            'Param2', 16-k,
+                            'Param2', param2,
                             'MinDist', 1400
                             #'DP', 1
                        );    

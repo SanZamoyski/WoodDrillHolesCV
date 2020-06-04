@@ -9,7 +9,7 @@ pkg load image;
 pkg load communications;
 
 if reuse_img == 0
-  im_highResOrig = imread('samples/MDF6A2.tiff');
+  im_highResOrig = imread('samples/MDF5A4.tiff');
   #MDF5A4, PAR5A1, PAR5A2, PAR5A3, PAR5A4, PAR6A2
   
   #im_highRes = imadjust(im_highResOrig);
@@ -60,12 +60,44 @@ for i=1:50
                        
   printf(": %d\n", size(circles)(2));
   
-  if size(circles)(2) > 7
+  if size(circles)(2) == 8
     break
   endif
                        
 endfor
 
+realPoints = [];
+
+for i=1:8
+  realPoints = [realPoints; circles{i}(1) circles{i}(2)];
+endfor
+
+realPoints = sortArray(realPoints);
+
+nominalPoints   =      [  0           0       
+                          0.3*4800    0            
+                          0.6*4800    0         
+                          0           0.3*4800  
+                          0.6*4800    0.3*4800   
+                          0           0.6*4800            
+                          0.3*4800    0.6*4800        
+                          0.6*4800    0.6*4800 ];
+                          
+ms1 = cv.matchShapes(nominalPoints, realPoints, 'Method', 'I1');
+ms2 = cv.matchShapes(nominalPoints, realPoints, 'Method', 'I2');
+ms3 = cv.matchShapes(nominalPoints, realPoints, 'Method', 'I3');
+
+F = cv.findFundamentalMat(realPoints, nominalPoints, 'Method', );
+correctedPoints = cv.correctMatches(F, realPoints, nominalPoints);
+rms = calcRms(realPoints, correctedPoints);
+
+dsNominal = distancesSumVertical(nominalPoints);
+dsReal = distancesSumVertical(realPoints) - dsNominal;
+dsCorrected = distancesSumVertical(correctedPoints) - dsNominal;
+
+printf("matchShapes: %f %f %f %f %f %f\n", ms1, ms2, ms3, rms, dsReal, dsCorrected);
+
+return
 
 #imwrite(bw_highRes, ['imfilter/bw.tiff']);
 #imwrite(bw_highResOrig, ['imfilter/bw-orig.tiff']);

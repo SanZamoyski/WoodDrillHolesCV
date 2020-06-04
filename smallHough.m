@@ -3,7 +3,7 @@ function [oneArray, param2] = smallHough(gr_highRes, holeRad)
   sizeMarginL = 25;
   sizeMarginH = 0;
   
-  tic;
+  #tic;
   
   outArray = [];
   oneArray = [];

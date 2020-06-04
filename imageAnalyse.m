@@ -13,19 +13,31 @@ resize = 0.2;
 pkg load image
 debug = false;
 
-nominalPoints(1:6)   = [ 0        0           0        0.3*4800       0        0.6*4800 ];
-nominalPoints(7:10)  = [ 0.3*4800 0                                   0.3*4800 0.6*4800 ];       
-nominalPoints(11:16) = [ 0.6*4800 0           0.6*4800 0.3*4800       0.6*4800 0.6*4800 ];
+#nominalPoints(1:6)   = [ 0        0           0        0.3*4800       0        0.6*4800 ];
+#nominalPoints(7:10)  = [ 0.3*4800 0                                   0.3*4800 0.6*4800 ];       
+#nominalPoints(11:16) = [ 0.6*4800 0           0.6*4800 0.3*4800       0.6*4800 0.6*4800 ];
 
-nominalDistance = distancesSum(nominalPoints);
+nominalPoints   =      [  0           0       
+                          0.3*4800    0            
+                          0.6*4800    0         
+                          0           0.3*4800  
+                          0.6*4800    0.3*4800   
+                          0           0.6*4800            
+                          0.3*4800    0.6*4800        
+                          0.6*4800    0.6*4800 ];
 
-printf("Sample\t\tCoord\t\tCoord2\t\tParam2\tErr\t\tDistance\n");
+#nominalPointsVertical = convertTo2x8(nominalPoints);
+
+#nominalDistance = distancesSum(nominalPoints);
+%h(1), h(2), r(1), r(2), param2b, param2s, round(abs(nominalDistance - realDistance)), norm(h2-r, 2), bestRms, bestDistSum, bestRotation
+printf("Sample\tCoord\t\tcorCoord\tCoord2\t\tParam2\tDistance\tcRMS\tcDistSum\tRotation\n");
 
 for b = 3:size(filenames)(1)
+  tic;
   filename = filenames(b, 1);
   [~, basename, ext] = fileparts (['samples/' filename.name]);
   
-  printf("%s:\t\t", basename)
+  printf("%s:\t", basename)
   
   holeRad = str2num(basename(4))*4800/508;
     
@@ -50,10 +62,17 @@ for b = 3:size(filenames)(1)
 
   #ec = eightCircles(im_highRes, gr_highRes);
   [ec, param2b] = eightCircles(bw_gray);
+  #printf("\t");
   #ec = bestCombination(ec);
   realDistance = distancesSum(ec);
   ec = convertTo2x8(ec);
-  h = round(mean(ec));
+  
+  uh = round(mean(ec));
+  printf("%d %d\t", uh(1), uh(2));
+  
+  [h, bestRms, bestDistSum, bestRotation] = correctedCenter(nominalPoints, ec);
+  h = round(h);
+  printf("%d %d", h(1), h(2));
   
   im_out = imresize(im_highResOrig, resize);   
   
@@ -62,6 +81,8 @@ for b = 3:size(filenames)(1)
     im_out = cv.circle(im_out, [ec(i, 1) ec(i, 2)] * resize, 300 * resize, 'Color', 'b', 'Thickness', 1);
   endfor
 
+  printf("\t");
+  
   if debug
     toc
   endif
@@ -82,6 +103,7 @@ for b = 3:size(filenames)(1)
   
   [r, param2s] = smallHough(bw_gray, holeRad);
   r = round(r);
+  printf("%d %d\t\t", r(1), r(2));
   
   im_highResMark = cv.drawMarker(im_highResOrig, h2, 'MarkerSize', 69, 'Color', 'b', 'Thickness', 1);
   im_highResMark = cv.drawMarker(im_highResMark, r, 'MarkerSize', 35, 'Color', 'm', 'Thickness', 1);
@@ -95,12 +117,15 @@ for b = 3:size(filenames)(1)
   
   imwrite(im_out, ['output/' basename '.png']);
   
-  stOut = sprintf("%d %d\t%d %d\t\t%d %d\t%d\t\t%2.1f", h(1), h(2), r(1), r(2), param2b, param2s, round(abs(nominalDistance - realDistance)), norm(h2-r, 2));
+  #stOut = sprintf("%d %d\t%d\t\t%2.1f\t\t%2.1f, %d, %f2.2", param2b, param2s, round(abs(nominalDistance - realDistance)), norm(h2-r, 2), bestRms, bestDistSum, bestRotation);
+  stOut = sprintf("%d %d\t%2.1f\t\t%2.1f\t%d\t\t%2.2f", param2b, param2s, norm(h2-r, 2), bestRms, bestDistSum, bestRotation);
   
-  printf("%s\n", stOut);
+  #do poprawy
+  printf("%s\t\t", stOut);
   
   fid = fopen (['output/' basename '.txt'], "w");
   fprintf(fid, "%s\n", stOut);
   fclose (fid);
+  toc;
   
 endfor
